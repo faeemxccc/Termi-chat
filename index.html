@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Terminal Chat</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Modern terminal-style monospace font -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap">
+  <!-- Use the compat (namespaced) builds so existing firebase.initializeApp() and firebase.firestore() calls work -->
+  <script defer src="https://www.gstatic.com/firebasejs/10.6.0/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore-compat.js"></script>
+    <!-- Matrix background script (draws animated falling characters) -->
+    <script defer src="matrix.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body>
+    <canvas id="matrix"></canvas>
+    <!-- Header with site title and toolbar -->
+    <header id="site-header" class="site-header" role="banner">
+      <div class="header-inner">
+        <div class="title">Termi</div>
+        <div id="toolbar" class="toolbar" role="toolbar" aria-label="global controls">
+          <button id="btn-menu" class="icon-btn" aria-haspopup="true" aria-expanded="false" title="Menu">☰ Menu</button>
+          <div id="menu-dropdown" class="menu-dropdown" role="menu" aria-hidden="true">
+            <a class="menu-item" href="docs.html" role="menuitem">📄 Docs</a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <!-- Welcome modal -->
+    <div id="welcome-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="modal-content">
+        <button class="modal-close" aria-label="Close">✕</button>
+        <h2>Welcome to Termi Chat</h2>
+        <p class="lead">A hacker-style terminal chat. Ready to ride the green wave? 💚🖥️</p>
+        <ul class="guidelines">
+          <li>Type your <strong>username</strong> and press <kbd>Enter</kbd> to join 👋</li>
+          <li>Use <code>/nick NEWNAME</code> to change your nick ✨</li>
+          <li>Try <code>/say Hello</code> to broadcast without changing nick 📣</li>
+          <li>Use <code>/clear</code> to wipe the terminal (local) 🧹</li>
+        </ul>
+        <div class="modal-actions">
+          <label><input type="checkbox" id="dont-show"> Don't show again</label>
+          <button id="start-btn" class="btn">Let's go 🚀</button>
+        </div>
+      </div>
+    </div>
+  <div id="terminal">
+    <div id="chat"></div>
+    <form id="input-form" action="#" onsubmit="return false;">
+      <span class="prompt" id="prompt"></span>
+      <!-- inline command line: contenteditable so it looks like a real terminal prompt -->
+      <span id="cmdline" class="cmdline" contenteditable="true" role="textbox" aria-label="terminal input"></span>
+    </form>
+  </div>
+  <!-- Docs link + Attribution -->
+  <div id="site-links" aria-hidden="true">
+    <a id="docs-link" href="docs.html" class="small-link">Docs</a>
+  </div>
+  <div id="attribution" aria-hidden="true">Made by faeemx <span id="version">v0.2</span></div>
+</body>
+</html>

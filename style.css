@@ -1,0 +1,289 @@
+body {
+  margin: 0;
+  background-color: #000;
+  color: #00FF00;
+  font-family: 'Ubuntu Mono', 'Courier New', monospace;
+  font-size: 16px;
+}
+
+/* Terminal panel - centered, semi-transparent so matrix shows through */
+#terminal {
+  position: relative;
+  z-index: 2;
+  margin: 3vh auto;
+  width: min(920px, 96vw);
+  height: 74vh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(0,20,0,0.6);
+  border: 1px solid rgba(0,255,0,0.08);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.55);
+  padding: 10px;
+  gap: 6px;
+  border-radius: 6px;
+}
+
+/* Matrix canvas sits behind the terminal content */
+#matrix {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+  display: block;
+}
+
+/* Top toolbar */
+.toolbar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 10px;
+  z-index: 9998;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  background: rgba(0,18,0,0.45);
+  border: 1px solid rgba(0,255,0,0.05);
+  padding: 4px 6px;
+  border-radius: 6px;
+  backdrop-filter: blur(4px);
+}
+.icon-btn {
+  background: transparent;
+  color: #dbffdb;
+  border: 1px solid transparent;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 13px;
+}
+.menu-dropdown { position: absolute; top: 44px; right: 8px; background: rgba(0,18,0,0.95); border: 1px solid rgba(0,255,0,0.06); padding: 6px; border-radius: 8px; display: none; flex-direction: column; gap:6px; min-width: 160px; z-index: 10000 }
+.menu-dropdown[aria-hidden="false"] { display: flex }
+.menu-item, .menu-dropdown a { background: transparent; color: #eaffea; border: none; text-align: left; padding: 8px 10px; border-radius: 6px; cursor: pointer; text-decoration: none }
+.menu-item:hover, .menu-item:focus, .menu-dropdown a:hover, .menu-dropdown a:focus { background: rgba(20,80,20,0.22) }
+
+/* Header styling */
+.site-header {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: min(920px, 96vw);
+  pointer-events: none; /* inner elements will opt-in */
+}
+.site-header .header-inner {
+  display:flex; align-items:center; justify-content:space-between; gap:10px; pointer-events: auto;
+  background: linear-gradient(180deg, rgba(0,12,0,0.9), rgba(0,8,0,0.6));
+  border: 1px solid rgba(0,255,0,0.05);
+  padding: 6px 8px; border-radius: 6px; backdrop-filter: blur(4px);
+}
+.site-header .title { color: #bfffbf; font-weight:700; font-size:15px; font-family: 'Ubuntu Mono', monospace }
+.site-header .toolbar { position: static; transform: none; }
+.site-header .menu-dropdown { right: 10px; top: calc(100% + 4px); }
+
+/* Modal styles */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+.modal[aria-hidden="false"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+.modal-content {
+  background: linear-gradient(180deg, rgba(0,25,0,0.95), rgba(0,10,0,0.9));
+  border: 1px solid rgba(0,255,0,0.1);
+  color: #eaffea;
+  padding: 22px;
+  width: min(720px, 92vw);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  transform: translateY(-8px) scale(0.99);
+  animation: modalIn 260ms ease forwards;
+}
+@keyframes modalIn {
+  to { transform: translateY(0) scale(1); }
+}
+.modal .modal-close {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  background: transparent;
+  border: none;
+  color: #bfffbf;
+  font-size: 18px;
+  cursor: pointer;
+}
+.modal h2 { margin: 0 0 8px 0; }
+.modal .lead { color: #bfffbf; margin-bottom: 12px; }
+.modal .guidelines { color: #cfefd0; margin: 8px 0 14px 18px; }
+.modal .guidelines li { margin: 6px 0; }
+.modal .modal-actions { display:flex; gap:12px; align-items:center; justify-content:space-between }
+.modal .btn { background: linear-gradient(90deg,#3cff6a,#0fe07a); border: none; color: #002000; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight:700 }
+.modal label { font-size: 13px; color: #dfffdc }
+
+/* Chat area: scrollable, preserves whitespace, shows messages as separate rows */
+#chat {
+  flex: 1 1 auto;
+  overflow: auto;
+  white-space: pre-wrap;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.msg {
+  display: block;
+  line-height: 1.45;
+  margin-bottom: 4px;
+  color: #c8ffd1; /* softer green for message text */
+  font-size: 15px;
+}
+.msg.cmd-echo {
+  color: #9fffa8;
+  font-style: italic;
+  opacity: 0.95;
+}
+.system-msg {
+  color: #8fd1a6;
+  opacity: 0.9;
+  font-size: 13px;
+}
+.msg .time {
+  color: #66ff66;
+  opacity: 0.9;
+  margin-right: 6px;
+  font-size: 12px;
+}
+.msg .user {
+  color: #9eff9e;
+  font-weight: 600;
+  margin-right: 6px;
+}
+.msg .text {
+  color: #dfffdc;
+}
+
+#input-form {
+  display: flex;
+  align-items: center;
+}
+
+.prompt {
+  margin-right: 12px;
+  min-width: 220px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.prompt .status-dot {
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle at 30% 30%, #9bff9b, #2bd02b);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(45,208,43,0.7);
+  flex: 0 0 auto;
+}
+.prompt .user {
+  color: #7cff7c;
+  font-weight: 700;
+}
+.prompt .at { display: none; }
+.prompt .host {
+  display: none;
+}
+.prompt .path { color: #aef7b6; opacity: 0.7; }
+.prompt .symbol {
+  margin-left: 6px;
+  color: #dfffdc;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  font-weight: 800;
+}
+
+/* subtle modern caret for empty cmdline */
+.cmdline:focus {
+  outline: none;
+}
+.cmdline::selection { background: rgba(124,255,124,0.18); }
+
+/* Input area sits at the bottom */
+#input-form {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Inline editable command line to mimic terminal typing */
+.cmdline {
+  flex: 1;
+  min-height: 20px;
+  outline: none;
+  color: #e6ffea;
+  caret-color: #7cff7c;
+  white-space: pre-wrap;
+}
+
+.cmdline:empty::before {
+  content: attr(data-placeholder);
+  color: rgba(200,255,200,0.35);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  body { font-size: 14px; }
+  #terminal {
+    margin: 2vh auto;
+    width: 96vw;
+    height: 82vh;
+    padding: 10px;
+    border-radius: 4px;
+  }
+  .prompt { min-width: 140px; gap:6px }
+  .prompt .status-dot { width: 8px; height: 8px }
+  .prompt .symbol { margin-left: 4px }
+  .cmdline { font-size: 15px }
+  .msg { font-size: 14px }
+  .modal-content { width: 96vw; padding: 16px }
+  .modal { background: rgba(0,0,0,0.7) }
+  #matrix { image-rendering: pixelated; }
+}
+
+/* Reduce matrix density on small screens to save CPU */
+@media (max-width: 420px) {
+  .prompt { min-width: 120px }
+  .cmdline { font-size: 14px }
+}
+
+/* Attribution footer */
+#attribution {
+  position: fixed;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  color: rgba(160,255,160,0.9);
+  font-size: 12px;
+  font-family: inherit;
+  pointer-events: none;
+  text-shadow: 0 0 8px rgba(30,255,90,0.08);
+  opacity: 0.95;
+}
+/* version text */
+#attribution #version { color: rgba(150,240,150,0.7); font-size: 11px; margin-left: 6px }

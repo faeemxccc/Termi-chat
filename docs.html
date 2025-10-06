@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Termi Chat — Docs</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap">
+  <script defer src="matrix.js"></script>
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+  <div id="terminal" style="width: min(920px, 96vw); margin:6vh auto;">
+    <div style="padding:18px; color:#dfffdc;">
+      <h1>Termi Chat — Documentation</h1>
+      <p class="lead">Quick guide: how this site is built, where data lives, and how to deploy it.</p>
+
+      <h2>Why I made this</h2>
+      <p>This project was created for fun and learning. It mimics a hacker-style terminal chat UI while practicing frontend interactivity, realtime databases, and static site hosting. The green-on-black aesthetic is just for the vibe — it's playful and retro.</p>
+
+      <h2>High-level architecture</h2>
+      <ul>
+        <li>Frontend: static HTML/CSS/JS (this repo)</li>
+        <li>Realtime backend: Firebase Firestore (used to store messages)</li>
+        <li>Hosting: GitHub Pages serves the static site</li>
+      </ul>
+
+      <h2>Firebase (Firestore) setup</h2>
+      <ol>
+        <li>Create a Firebase project at <a href="https://console.firebase.google.com/">console.firebase.google.com</a>.</li>
+        <li>In Project Settings, add a Web App and copy the config snippet (apiKey, projectId, etc.).</li>
+        <li>Enable Firestore in the console and create a collection named <code>messages</code>.</li>
+        <li>Security: for quick demos you might allow open reads/writes, but for production set rules to require authentication or server-side validation.</li>
+        <li>In <code>script.js</code> replace the <code>firebaseConfig</code> object with your app's values and keep the firestore compat script included in <code>index.html</code>.</li>
+      </ol>
+
+      <h2>Data shape</h2>
+      <pre style="background:rgba(0,0,0,0.3); padding:10px; border-radius:6px;">{
+  username: "alice",
+  message: "Hello world",
+  timestamp: "2025-10-07T12:34:56.789Z"
+}</pre>
+
+      <h2>Deploy to GitHub Pages</h2>
+      <ol>
+        <li>Push your repo to GitHub.</li>
+        <li>In the repo Settings → Pages, choose the branch (main) and folder (root) to publish.</li>
+        <li>Your site will be available at <code>https://&lt;your-user&gt;.github.io/&lt;repo&gt;/</code> shortly.</li>
+      </ol>
+
+      <h2>Local testing</h2>
+      <p>Open <code>index.html</code> in your browser or run a simple static server (recommended) to avoid any file-origin limitations for modern APIs:</p>
+      <pre style="background:rgba(0,0,0,0.2); padding:10px; border-radius:6px;"># Python 3
+python -m http.server 8000</pre>
+
+      <h2>Notes & tips</h2>
+      <ul>
+        <li>Use Firestore security rules for any real deployment.</li>
+        <li>Remove or rotate API keys if you share the repo publicly, or move them to environment-protected systems.</li>
+        <li>GitHub Pages is ideal for static frontends but not for private or server-side logic.</li>
+      </ul>
+
+      <p style="margin-top:18px;"><a href="index.html">← Back to Termi Chat</a></p>
+
+    </div>
+  </div>
+</body>
+</html>
