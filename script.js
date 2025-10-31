@@ -68,20 +68,24 @@ function renderPrompt({ user, host, path, symbol }) {
   prompt.appendChild(sym);
 }
 
-async function sendMessage(message) {
+async function sendMessage(message, clientId = null) {
   const timestamp = new Date().toISOString();
-  await db.collection('messages').add({
+  const payload = {
     username,
     message,
     timestamp
-  });
+  };
+  if (clientId) payload.clientId = clientId;
+  await db.collection('messages').add(payload);
 }
 
-function renderMessage(data) {
+function renderMessage(data, docId) {
   const time = new Date(data.timestamp).toLocaleTimeString();
 
   const row = document.createElement('div');
   row.className = 'msg';
+  if (docId) row.setAttribute('data-doc-id', docId);
+  if (data.clientId) row.setAttribute('data-client-id', data.clientId);
 
   const ts = document.createElement('span');
   ts.className = 'time';
@@ -100,8 +104,21 @@ function renderMessage(data) {
   row.appendChild(ts);
   row.appendChild(user);
   row.appendChild(text);
+
+  // If there's a pending local echo with matching clientId, replace it smoothly
+  if (data.clientId) {
+    const pending = chat.querySelector(`[data-client-id="${data.clientId}"]`);
+    if (pending) {
+      pending.replaceWith(row);
+      trimMessages(20);
+      chat.scrollTop = chat.scrollHeight;
+      return;
+    }
+  }
+
   chat.appendChild(row);
-  // keep scroll at bottom
+  // Trim old messages and keep scroll at bottom
+  trimMessages(20);
   chat.scrollTop = chat.scrollHeight;
 }
 
@@ -120,13 +137,31 @@ function colorForUser(name) {
   return `hsl(${hue} 78% 58%)`;
 }
 
-// Listen to DB changes
+// Keep only the last `limit` message elements in the chat container to
+// avoid unbounded DOM growth. This trims oldest elements first.
+function trimMessages(limit = 20) {
+  if (!chat) return;
+  // select both normal messages and system messages
+  const nodes = chat.querySelectorAll('.msg, .system-msg');
+  const removeCount = nodes.length - limit;
+  if (removeCount > 0) {
+    for (let i = 0; i < removeCount; i++) {
+      const n = nodes[i];
+      if (n && n.parentElement === chat) n.remove();
+    }
+  }
+}
+
+// Listen to DB changes incrementally to avoid clearing the whole chat (prevents flicker)
 db.collection('messages')
   .orderBy('timestamp')
   .onSnapshot(snapshot => {
-    // clear and re-render as DOM nodes
-    chat.innerHTML = '';
-    snapshot.forEach(doc => renderMessage(doc.data()));
+    snapshot.docChanges().forEach(change => {
+      if (change.type === 'added') {
+        renderMessage(change.doc.data(), change.doc.id);
+      }
+      // future: handle 'modified' and 'removed' if needed
+    });
   });
 
 // Handle Enter on the contenteditable cmdline
@@ -171,9 +206,11 @@ cmdline.addEventListener('keydown', async (e) => {
       cmdline.innerText = '';
       setPrompt();
     } else {
-      // echo the command locally as a terminal echo
-      echoCommand(value);
-      await sendMessage(value);
+      // generate a clientId for local pending echo so we can replace it when the DB confirms
+      const clientId = 'c' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+      // echo the command locally as a terminal echo (pending)
+      echoCommand(value, clientId);
+      await sendMessage(value, clientId);
       cmdline.innerText = '';
     }
   }
@@ -192,9 +229,9 @@ function placeCaretAtEnd(el) {
   }
 }
 
-function echoCommand(cmd) {
+function echoCommand(cmd, clientId = null) {
   const row = document.createElement('div');
-  row.className = 'msg cmd-echo';
+  row.className = 'msg cmd-echo pending';
   // Create structured echo so username can be colored
   const userText = prompt.querySelector('.user')?.textContent || '';
   const host = prompt.querySelector('.host')?.textContent || '';
@@ -216,7 +253,9 @@ function echoCommand(cmd) {
   row.appendChild(ts);
   row.appendChild(userSpan);
   row.appendChild(text);
+  if (clientId) row.setAttribute('data-client-id', clientId);
   chat.appendChild(row);
+  trimMessages(20);
   chat.scrollTop = chat.scrollHeight;
 }
 
@@ -225,6 +264,7 @@ function echoSystem(text) {
   row.className = 'system-msg';
   row.textContent = text;
   chat.appendChild(row);
+  trimMessages(20);
   chat.scrollTop = chat.scrollHeight;
 }
 
@@ -251,9 +291,10 @@ function handleLocalCommand(str) {
   if (cmd === '/say') {
     const message = parts.slice(1).join(' ');
     if (!message) return echoSystem('Usage: /say MESSAGE');
-    echoCommand(message);
+    const clientId = 'c' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+    echoCommand(message, clientId);
     // optionally send as system or broadcast; here we send as user message
-    if (username) sendMessage(message);
+    if (username) sendMessage(message, clientId);
     return;
   }
   echoSystem(`Unknown command: ${cmd}`);

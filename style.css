@@ -150,8 +150,9 @@ body {
   font-size: 15px;
 }
 .msg.cmd-echo {
-  color: #9fffa8;
-  font-style: italic;
+  /* make local echoes visually match final messages to avoid a flash/shift */
+  color: #c8ffd1;
+  font-style: normal;
   opacity: 0.95;
 }
 .system-msg {
@@ -287,3 +288,32 @@ body {
 }
 /* version text */
 #attribution #version { color: rgba(150,240,150,0.7); font-size: 11px; margin-left: 6px }
+
+/* Matrix toggle styling */
+.matrix-toggle {
+  background: #0b0b0b;
+  color: #0f0;
+  padding: 8px 12px;
+  border: 1px solid #0f0;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+/* Desktop floating button (if you keep it) — hide on mobile */
+#matrix-toggle { /* existing floating button id */
+  position: fixed;
+  right: 12px;
+  top: 12px;
+  z-index: 999;
+}
+
+/* Show mobile button only on small screens, hide on large screens */
+#matrix-toggle-mobile { display: none; }
+@media (max-width: 768px) {
+  #matrix-toggle { display: none; } /* hide floating desktop button on mobile */
+  #matrix-toggle-mobile { display: inline-block; }
+}
+@media (min-width: 769px) {
+  #matrix-toggle-mobile { display: none; }
+}
